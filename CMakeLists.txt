@@ -54,9 +54,69 @@ if (TARGET fmt::fmt-header-only AND NOT TARGET fmt::fmt)
 endif()
 
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--export-dynamic -Wl,--enable-new-dtags -Wl,--as-needed")
-set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -Wl,-z,defs -Wl,--enable-new-dtags -Wl,--as-needed")
+set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -Wl,--enable-new-dtags -Wl,--as-needed")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--enable-new-dtags -Wl,--as-needed")
 add_compile_options(-std=c++17)
+
+if (IRODS_ENABLE_ADDRESS_SANITIZER)
+  # The following options are compiled into all binaries and allow them to start even
+  # when an ODR violation is detected.
+  #
+  # Make sure the correct llvm-symbolizer binary is available to Address Sanitizer. This binary
+  # allows debug symbols to be reported appropriately. There are two ways to do this:
+  #
+  #     export PATH=/opt/irods-externals/clang13.0.0-0/bin:$PATH
+  #
+  # - or -
+  #
+  #     export ASAN_SYMBOLIZER_PATH=/opt/irods-externals/clang13.0.0-0/bin/llvm-symbolizer
+  #
+  add_compile_definitions(IRODS_ADDRESS_SANITIZER_DEFAULT_OPTIONS="log_path=/tmp/irods_asan_output:detect_odr_violation=1")
+  add_compile_options(-fsanitize=address)
+  add_link_options(-fsanitize=address)
+endif()
+
+if (IRODS_ENABLE_UNDEFINED_BEHAVIOR_SANITIZER)
+  # Make sure the correct llvm-symbolizer binary is available to Undefined Behavior Sanitizer. This binary
+  # allows debug symbols to be reported appropriately. Additionally, set options for logging.
+  #
+  #     export PATH=/opt/irods-externals/clang13.0.1-0/bin:$PATH
+  add_compile_definitions(IRODS_UNDEFINED_BEHAVIOR_SANITIZER_DEFAULT_OPTIONS="log_path=/tmp/irods_ubsan_output")
+
+  add_compile_options(
+    -fsanitize=undefined
+    -fsanitize=float-divide-by-zero
+    -fsanitize=unsigned-integer-overflow
+    -fsanitize=local-bounds
+    -fsanitize=nullability
+    -fsanitize-ignorelist=${CMAKE_CURRENT_SOURCE_DIR}/ub-sanitizer-ignorelist.txt)
+  add_link_options(
+    -fsanitize=undefined
+    -fsanitize=float-divide-by-zero
+    -fsanitize=unsigned-integer-overflow
+    -fsanitize=local-bounds
+    -fsanitize=nullability)
+
+  if (IRODS_ENABLE_UNDEFINED_BEHAVIOR_SANITIZER_IMPLICIT_CONVERSION_CHECK)
+     add_compile_options(-fsanitize=implicit-conversion)
+     add_link_options(-fsanitize=implicit-conversion)
+  endif()
+endif()
+
+if (IRODS_ENABLE_ADDRESS_SANITIZER OR IRODS_ENABLE_UNDEFINED_BEHAVIOR_SANITIZER)
+  add_compile_options(
+    -fno-omit-frame-pointer
+    -fno-optimize-sibling-calls
+    -O1)
+  add_link_options(
+    -fno-omit-frame-pointer
+    -fno-optimize-sibling-calls
+    -O1)
+else()
+  set(CMAKE_EXE_LINKER_FLAGS_INIT "${CMAKE_EXE_LINKER_FLAGS_INIT} -Wl,-z,defs")
+  set(CMAKE_MODULE_LINKER_FLAGS_INIT "${CMAKE_MODULE_LINKER_FLAGS_INIT} -Wl,-z,defs")
+  set(CMAKE_SHARED_LINKER_FLAGS_INIT "${CMAKE_SHARED_LINKER_FLAGS_INIT} -Wl,-z,defs")
+endif()
 
 set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY OFF)
 set(CPACK_COMPONENT_INCLUDE_TOPLEVEL_DIRECTORY OFF)
