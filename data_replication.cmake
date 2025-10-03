@@ -30,7 +30,7 @@ target_include_directories(
     ${IRODS_INCLUDE_DIRS}
     ${IRODS_EXTERNALS_FULLPATH_JSON}/include
     ${IRODS_EXTERNALS_FULLPATH_BOOST}/include
-    ${IRODS_EXTERNALS_FULLPATH_FMT}/include
+    fmt::fmt
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     )
 
@@ -38,7 +38,7 @@ target_link_libraries(
     ${TARGET_NAME}
     PRIVATE
     ${IRODS_PLUGIN_POLICY_LINK_LIBRARIES}
-    ${IRODS_EXTERNALS_FULLPATH_FMT}/lib/libfmt.so
+    fmt::fmt
     ${IRODS_EXTERNALS_FULLPATH_BOOST}/lib/libboost_filesystem.so
     irods_common
     irods_dev_policy_composition_framework
