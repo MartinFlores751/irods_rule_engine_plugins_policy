@@ -88,8 +88,7 @@ if (IRODS_ENABLE_UNDEFINED_BEHAVIOR_SANITIZER)
     -fsanitize=float-divide-by-zero
     -fsanitize=unsigned-integer-overflow
     -fsanitize=local-bounds
-    -fsanitize=nullability
-    -fsanitize-ignorelist=${CMAKE_CURRENT_SOURCE_DIR}/ub-sanitizer-ignorelist.txt)
+    -fsanitize=nullability)
   add_link_options(
     -fsanitize=undefined
     -fsanitize=float-divide-by-zero
