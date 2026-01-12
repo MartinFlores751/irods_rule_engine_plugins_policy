@@ -18,7 +18,7 @@ namespace irods::policy_composition::policy_engine {
     namespace tokens {
             static const std::string query_substitution{"IRODS_TOKEN_QUERY_SUBSTITUTION_END_TOKEN"};
             static const std::string current_time{"IRODS_TOKEN_CURRENT_TIME_END_TOKEN"};
-            static const std::string lifetime{"IRODS_TOKEN_LIFETIME_END_TOKEN"};
+            static const std::string seconds_ago{"IRODS_TOKEN_SECONDS_AGO_END_TOKEN"};
             static const std::string user_name{"IRODS_TOKEN_USER_NAME_END_TOKEN"};
             static const std::string collection_name{"IRODS_TOKEN_COLLECTION_NAME_END_TOKEN"};
             static const std::string data_name{"IRODS_TOKEN_DATA_NAME_END_TOKEN"};
@@ -26,9 +26,10 @@ namespace irods::policy_composition::policy_engine {
             static const std::string destination_resource{"IRODS_TOKEN_DESTINATION_RESOURCE_END_TOKEN"};
             static const std::string source_leaf_bundle{"IRODS_TOKEN_SOURCE_RESOURCE_LEAF_BUNDLE_END_TOKEN"};
             static const std::string destination_leaf_bundle{"IRODS_TOKEN_DESTINATION_RESOURCE_LEAF_BUNDLE_END_TOKEN"};
+            static const std::string seconds_since_epoch{"IRODS_TOKEN_SECONDS_SINCE_EPOCH_END_TOKEN"};
             static std::map<std::string, uint32_t> index_map = {
                 {current_time, 0}
-              , {lifetime, 1}
+              , {seconds_ago, 1}
               , {user_name, 2}
               , {collection_name, 3}
               , {data_name, 4}
@@ -36,6 +37,7 @@ namespace irods::policy_composition::policy_engine {
               , {destination_resource, 6}
               , {source_leaf_bundle, 5}
               , {destination_leaf_bundle, 6}
+              , {seconds_since_epoch, 7}
             };
     }; // tokens
 

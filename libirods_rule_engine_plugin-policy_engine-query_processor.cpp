@@ -76,22 +76,36 @@ namespace {
 
             auto [data_name, coll_name] = pe::split_logical_path(comm, logical_path);
 
-            std::vector<std::string> values = {std::to_string(std::time(nullptr)), "0", user_name, coll_name, data_name, source_resource, destination_resource};
+            std::vector<std::string> values = {std::to_string(std::time(nullptr)), "0", user_name, coll_name, data_name, source_resource, destination_resource, "0"};
 
-            time_t lifetime{};
-            if(ctx.parameters.contains("lifetime")) {
-                auto ltp = ctx.parameters.at("lifetime");
-                if(pe::paramter_requires_query_substitution(ltp)) {
-                    auto tmp = pe::perform_query_substitution<time_t>(comm, ltp, values);
-                    lifetime = std::time(nullptr) - tmp;
+            auto epoch_seconds_formatter{[](time_t _unix_epoch){return fmt::format("{0:011}", _unix_epoch);}};
+
+            time_t seconds_ago{};
+            if(ctx.parameters.contains("seconds_ago")) {
+                auto member_data = ctx.parameters["seconds_ago"];
+                if(pe::paramter_requires_query_substitution(member_data)) {
+                    auto tmp = pe::perform_query_substitution<time_t>(comm, member_data, values);
+                    seconds_ago = std::time(nullptr) - tmp;
                 }
                 else {
-                    auto tmp = ctx.parameters.at("lifetime").get<time_t>();
-                    lifetime = std::time(nullptr) - tmp;
+                    auto tmp = member_data.get<time_t>();
+                    seconds_ago = std::time(nullptr) - tmp;
                 }
             }
 
-            values[1] = std::to_string(lifetime);
+            values[pe::tokens::index_map[pe::tokens::seconds_ago]] = epoch_seconds_formatter(seconds_ago);
+
+            time_t seconds_since_epoch{};
+            if (ctx.parameters.contains("seconds_since_epoch")) {
+                auto member_data{ctx.parameters["seconds_since_epoch"]};
+                if (pe::paramter_requires_query_substitution(member_data)) {
+                    seconds_since_epoch = pe::perform_query_substitution<time_t>(comm, member_data, values);
+                } else {
+                    seconds_since_epoch = member_data.get<time_t>();
+                }
+            }
+
+            values[pe::tokens::index_map[pe::tokens::seconds_since_epoch]] = epoch_seconds_formatter(seconds_since_epoch);            
 
             pe::parse_and_replace_query_string_tokens(query_string, values);
 
