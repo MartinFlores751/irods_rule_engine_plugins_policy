@@ -5,9 +5,9 @@
 	    "policy" : "irods_policy_execute_rule",
             "payload" : {
 	        "policy_to_invoke" : "irods_policy_query_processor",
-                "lifetime" : "10",
+                "seconds_ago" : "10",
                 "parameters" : {
-                    "query_string" : "SELECT USER_NAME, COLL_NAME, DATA_NAME, RESC_NAME WHERE COLL_NAME like '/tempZone/home/rods%' AND META_DATA_ATTR_NAME = 'irods::access_time' AND META_DATA_ATTR_VALUE < 'IRODS_TOKEN_LIFETIME'",
+                    "query_string" : "SELECT USER_NAME, COLL_NAME, DATA_NAME, RESC_NAME WHERE COLL_NAME like '/tempZone/home/rods%' AND DATA_ACCESS_TIME < 'IRODS_TOKEN_SECONDS_AGO_END_TOKEN'",
                     "query_limit" : 10,
                     "query_type" : "general",
                     "number_of_threads" : 4,

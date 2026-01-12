@@ -226,37 +226,6 @@ Example:
 }
 ```
 
-### Access Time
-
-The `access_time` policy engine will annotate a data object with the last access time, which is useful for other policies such as data movement.  By default, a metadata attribute of `irods::access_time` is utilized.  This can be overridden with an `"attribute"` string in the `"configuration"` of the policy.
-
-Example:
-```json
-            {
-                "instance_name": "irods_rule_engine_plugin-policy_engine-access_time-instance",
-                "plugin_name": "irods_rule_engine_plugin-policy_engine-access_time",
-                "plugin_specific_configuration": {
-                    "log_errors" : "true"
-                }
-            },
-            {
-                "instance_name": "irods_rule_engine_plugin-event_handler-data_object_modified-instance",
-                "plugin_name": "irods_rule_engine_plugin-event_handler-data_object_modified",
-                "plugin_specific_configuration": {
-                    "policies_to_invoke" : [
-                        {
-                            "active_policy_clauses" : ["post"],
-                            "events" : ["put", "get", "create", "read", "write", "rename", "registration", "replication"],
-                            "policy_to_invoke"    : "irods_policy_access_time",
-                            "configuration" : {
-                                "attribute" : "custom_access_time_attribute"
-                            }
-                        }
-                    ]
-                }
-            }
-```
-
 ### Data Replication
 
 The `data_replication` policy engine will replicate data from a resource to a configured destination resource, or use a mapping from source resource to an array of destination resources.
