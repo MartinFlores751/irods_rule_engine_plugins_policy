@@ -1,10 +1,10 @@
-set(POLICY_NAME "data_retention")
+set(POLICY_NAME "policy_engine_example")
 
 string(REPLACE "_" "-" POLICY_NAME_HYPHENS ${POLICY_NAME})
 set(IRODS_PACKAGE_COMPONENT_POLICY_NAME "${POLICY_NAME_HYPHENS}${IRODS_PACKAGE_FILE_NAME_SUFFIX}")
 string(TOUPPER ${IRODS_PACKAGE_COMPONENT_POLICY_NAME} IRODS_PACKAGE_COMPONENT_POLICY_NAME_UPPERCASE)
 
-set(TARGET_NAME "${PROJECT_NAME}-policy_engine-${POLICY_NAME}")
+set(TARGET_NAME "${PROJECT_NAME}-${POLICY_NAME}")
 string(REPLACE "_" "-" TARGET_NAME_HYPHENS ${TARGET_NAME})
 
 set(
@@ -21,13 +21,16 @@ set(
 add_library(
     ${TARGET_NAME}
     MODULE
-    ${CMAKE_SOURCE_DIR}/lib${TARGET_NAME}.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/policy_composition_framework_utilities.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/example/lib${TARGET_NAME}.cpp
     )
 
 target_include_directories(
     ${TARGET_NAME}
     PRIVATE
     ${IRODS_INCLUDE_DIRS}
+    ${IRODS_EXTERNALS_FULLPATH_JSON}/include
+    ${IRODS_EXTERNALS_FULLPATH_JANSSON}/include
     ${IRODS_EXTERNALS_FULLPATH_BOOST}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     )
@@ -37,9 +40,8 @@ target_link_libraries(
     PRIVATE
     ${IRODS_PLUGIN_POLICY_LINK_LIBRARIES}
     fmt::fmt
-    nlohmann_json::nlohmann_json
+    ${IRODS_EXTERNALS_FULLPATH_BOOST}/lib/libboost_regex.so
     irods_common
-    irods_dev_policy_composition_framework
     )
 
 target_compile_definitions(${TARGET_NAME} PRIVATE ${IRODS_PLUGIN_POLICY_COMPILE_DEFINITIONS} ${IRODS_COMPILE_DEFINITIONS} BOOST_SYSTEM_NO_DEPRECATED)
@@ -52,18 +54,6 @@ install(
   DESTINATION usr/lib/irods/plugins/rule_engines
   COMPONENT ${IRODS_PACKAGE_COMPONENT_POLICY_NAME}
   )
-
-install(
-  FILES
-  packaging/test_plugin_policy_engine-${POLICY_NAME}.py
-  DESTINATION var/lib/irods/scripts/irods/test
-  COMPONENT ${IRODS_PACKAGE_COMPONENT_POLICY_NAME}
-  )
-
-cpack_add_component(
-    ${IRODS_PACKAGE_COMPONENT_POLICY_NAME}
-    GROUP
-    policy)
 
 set(CPACK_PACKAGE_VERSION ${IRODS_PLUGIN_VERSION})
 set(CPACK_DEBIAN_${IRODS_PACKAGE_COMPONENT_POLICY_NAME_UPPERCASE}_FILE_NAME ${TARGET_NAME_HYPHENS}-${IRODS_PLUGIN_VERSION}-${IRODS_LINUX_DISTRIBUTION_NAME}-${IRODS_LINUX_DISTRIBUTION_VERSION_MAJOR}-${CMAKE_SYSTEM_PROCESSOR}.deb)

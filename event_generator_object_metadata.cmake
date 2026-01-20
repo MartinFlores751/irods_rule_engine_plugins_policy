@@ -47,7 +47,6 @@ target_link_libraries(
 
 target_compile_definitions(${TARGET_NAME} PRIVATE ${IRODS_PLUGIN_POLICY_COMPILE_DEFINITIONS} ${IRODS_COMPILE_DEFINITIONS} BOOST_SYSTEM_NO_DEPRECATED)
 target_compile_options(${TARGET_NAME} PRIVATE -Wno-write-strings)
-set_property(TARGET ${TARGET_NAME} PROPERTY CXX_STANDARD ${IRODS_CXX_STANDARD})
 
 install(
   TARGETS

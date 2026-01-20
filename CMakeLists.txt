@@ -7,6 +7,8 @@ set(IRODS_PLUGIN_REVISION "0")
 include(RequireOutOfSourceBuild)
 include(IrodsCXXCompiler)
 
+set(CMAKE_CXX_STANDARD ${IRODS_CXX_STANDARD})
+
 set(CMAKE_EXE_LINKER_FLAGS_INIT "-Wl,--export-dynamic -Wl,--enable-new-dtags -Wl,--as-needed")
 set(CMAKE_MODULE_LINKER_FLAGS_INIT "-Wl,--enable-new-dtags -Wl,--as-needed")
 set(CMAKE_SHARED_LINKER_FLAGS_INIT "-Wl,--enable-new-dtags -Wl,--as-needed")
@@ -73,7 +75,7 @@ else()
   set(CMAKE_SHARED_LINKER_FLAGS_INIT "${CMAKE_SHARED_LINKER_FLAGS_INIT} -Wl,-z,defs")
 endif()
 
-set(IRODS_PLUGIN_VERSION "${IRODS_VERSION}.${IRODS_PLUGIN_REVISION}")
+set(IRODS_PLUGIN_VERSION "0.1.0")
 
 project(${PROJECT_NAME}
   VERSION "${IRODS_PLUGIN_VERSION}"
@@ -99,9 +101,13 @@ find_package(nlohmann_json "3.6.1" REQUIRED)
 
 find_package(fmt 8.1.1 REQUIRED)
 
+include(IrodsCPackCommon)
+include(IrodsCPackPlatform)
+include(CPackComponent)
+
 set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY OFF)
 set(CPACK_COMPONENT_INCLUDE_TOPLEVEL_DIRECTORY OFF)
-set(CPACK_COMPONENTS_GROUPING IGNORE)
+set(CPACK_COMPONENTS_GROUPING ONE_PER_GROUP)
 set(CPACK_PACKAGE_CONTACT "Renaissance Computing Institute <info@irods.org>")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "The integrated Rule-Oriented Data System")
 set(CPACK_PACKAGE_VENDOR "Renaissance Computing Institute <info@irods.org>")
@@ -124,12 +130,22 @@ set(CPACK_RPM_PACKAGE_AUTOPROV 0)
 
 set(CPACK_ARCHIVE_COMPONENT_INSTALL ON)
 
-include(/usr/lib/irods/cmake/policy_composition_framework_cmake_utilities.cmake)
+add_subdirectory(framework)
 
 # CPACK names component package files as "${CPACK_PACKAGE_FILE_NAME}-${COMPONENT_NAME}"
 # CPackDeb TO_UPPERs all the component names when checking the ${CPACK_DEBIAN_<COMPONENT>...} variables
 
 # include all cmake files for rule engine plugins for this repository
+
+cpack_add_component_group(policy)
+
+set(CPACK_DEBIAN_POLICY_PACKAGE_DEPENDS "${IRODS_PACKAGE_DEPENDENCIES_STRING}, irods-server (= ${IRODS_VERSION}), irods-runtime (= ${IRODS_VERSION}), libc6")
+
+if (IRODS_LINUX_DISTRIBUTION_NAME STREQUAL "centos" OR IRODS_LINUX_DISTRIBUTION_NAME STREQUAL "centos linux")
+    set(CPACK_RPM_POLICY_PACKAGE_REQUIRES "${IRODS_PACKAGE_DEPENDENCIES_STRING}, irods-server = ${IRODS_VERSION}, irods-runtime = ${IRODS_VERSION}, openssl")
+elseif (IRODS_LINUX_DISTRIBUTION_NAME STREQUAL "opensuse")
+    set(CPACK_RPM_POLICY_PACKAGE_REQUIRES "${IRODS_PACKAGE_DEPENDENCIES_STRING}, irods-server = ${IRODS_VERSION}, irods-runtime = ${IRODS_VERSION}, libopenssl1_0_0")
+endif()
 
 include(${CMAKE_SOURCE_DIR}/data_replication.cmake)
 include(${CMAKE_SOURCE_DIR}/data_retention.cmake)
@@ -137,7 +153,11 @@ include(${CMAKE_SOURCE_DIR}/data_verification.cmake)
 include(${CMAKE_SOURCE_DIR}/filesystem_usage.cmake)
 include(${CMAKE_SOURCE_DIR}/log_context.cmake)
 include(${CMAKE_SOURCE_DIR}/query_processor.cmake)
-include(${CMAKE_SOURCE_DIR}/testing_policy.cmake)
+
+if (BUILD_TESTING_POLICY)
+    include(${CMAKE_SOURCE_DIR}/testing_policy.cmake)
+endif()
+
 include(${CMAKE_SOURCE_DIR}/event_handler_data_object_modified.cmake)
 include(${CMAKE_SOURCE_DIR}/event_handler_metadata_modified.cmake)
 include(${CMAKE_SOURCE_DIR}/event_handler_collection_modified.cmake)
