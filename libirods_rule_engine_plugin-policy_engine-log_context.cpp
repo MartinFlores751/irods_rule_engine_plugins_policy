@@ -9,22 +9,23 @@
 #include <irods/rsReadCollection.hpp>
 #include <irods/rsCloseCollection.hpp>
 
-namespace {
+namespace
+{
 
-    // clang-format off
+	// clang-format off
     namespace pc   = irods::policy_composition;
     namespace pe   = irods::policy_composition::policy_engine;
     using     json = nlohmann::json;
-    // clang-format on
+	// clang-format on
 
-    irods::error log_context(const pe::context& ctx, pe::arg_type out)
-    {
-        std::cout << "PARAMETERS:    [" << ctx.parameters.dump(4)    << "]\n";
-        std::cout << "CONFIGURATION: [" << ctx.configuration.dump(4) << "]\n";
+	irods::error log_context(const pe::context& ctx, pe::arg_type out)
+	{
+		std::cout << "PARAMETERS:    [" << ctx.parameters.dump(4) << "]\n";
+		std::cout << "CONFIGURATION: [" << ctx.configuration.dump(4) << "]\n";
 
-        return SUCCESS();
+		return SUCCESS();
 
-    } // log_context
+	} // log_context
 
 } // namespace
 
@@ -74,13 +75,7 @@ const char usage[] = R"(
 }
 )";
 
-extern "C"
-pe::plugin_pointer_type plugin_factory(
-      const std::string& _plugin_name
-    , const std::string&) {
-    return pe::make(
-                 _plugin_name
-               , "irods_policy_log_context"
-               , usage
-               , log_context);
+extern "C" pe::plugin_pointer_type plugin_factory(const std::string& _plugin_name, const std::string&)
+{
+	return pe::make(_plugin_name, "irods_policy_log_context", usage, log_context);
 } // plugin_factory
