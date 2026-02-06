@@ -41,33 +41,22 @@ const char usage[] = R"(
 
 irods::error example_policy(const pe::context& ctx, pe::arg_type out)
 {
-    //  struct context {
-    //      ruleExecInfo_t* rei{};
-    //      std::string     instance_name{};
-    //      std::string     policy_name{};
-    //      json            parameters{};
-    //      json            configuration{};
-    //  }; // struct context
+	//  struct context {
+	//      ruleExecInfo_t* rei{};
+	//      std::string     instance_name{};
+	//      std::string     policy_name{};
+	//      json            parameters{};
+	//      json            configuration{};
+	//  }; // struct context
 
-    *out = "Hello, World! from the example policy engine";
+	*out = "Hello, World! from the example policy engine";
 
-    rodsLog(
-          LOG_NOTICE
-        , "[%s]::[%s]"
-        , ctx.instance_name.c_str()
-        , ctx.policy_name.c_str());
-    return SUCCESS();
+	rodsLog(LOG_NOTICE, "[%s]::[%s]", ctx.instance_name.c_str(), ctx.policy_name.c_str());
+	return SUCCESS();
 } // example_policy
 
-extern "C"
-pe::plugin_pointer_type plugin_factory(
-      const std::string& _plugin_name
-    , const std::string&) {
-
-    return pe::make(
-                 _plugin_name
-               , "irods_policy_engine_example"
-               , usage
-               , example_policy);
+extern "C" pe::plugin_pointer_type plugin_factory(const std::string& _plugin_name, const std::string&)
+{
+	return pe::make(_plugin_name, "irods_policy_engine_example", usage, example_policy);
 
 } // plugin_factory

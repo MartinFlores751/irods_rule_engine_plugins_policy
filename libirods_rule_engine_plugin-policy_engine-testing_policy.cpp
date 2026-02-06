@@ -10,130 +10,125 @@
 
 #include <irods/policy_composition_framework_event_handler.hpp>
 
-namespace {
+namespace
+{
 
-    // clang-format off
+	// clang-format off
     namespace pc   = irods::policy_composition;
     namespace kw   = irods::policy_composition::keywords;
     namespace pe   = irods::policy_composition::policy_engine;
     namespace fs   = irods::experimental::filesystem;
     namespace fsvr = irods::experimental::filesystem::server;
     using     json = nlohmann::json;
-    // clang-format on
+	// clang-format on
 
-    const std::map<std::string, std::string> type_to_token {
-        {kw::collection,  "-C"},
-        {kw::data_object, "-d"},
-        {kw::user,        "-u"},
-        {kw::resource,    "-R"}
-    };
+	const std::map<std::string, std::string> type_to_token{
+		{kw::collection, "-C"},
+		{kw::data_object, "-d"},
+		{kw::user, "-u"},
+		{kw::resource, "-R"}};
 
-    auto type_to_entity(const std::string& _type, json _params)
-    {
-        const std::map<std::string, std::string> type_to_index {
-            {kw::collection,  kw::logical_path},
-            {kw::data_object, kw::logical_path},
-            {kw::user,        kw::user_name},
-            {kw::resource,    kw::source_resource}
-        };
+	auto type_to_entity(const std::string& _type, json _params)
+	{
+		const std::map<std::string, std::string> type_to_index{
+			{kw::collection, kw::logical_path},
+			{kw::data_object, kw::logical_path},
+			{kw::user, kw::user_name},
+			{kw::resource, kw::source_resource}};
 
-        auto idx = type_to_index.at(_type);
+		auto idx = type_to_index.at(_type);
 
-        return _params.at(idx).get<std::string>();
+		return _params.at(idx).get<std::string>();
 
-    } // type_to_entity
+	} // type_to_entity
 
-    irods::error testing_policy(const pe::context& ctx, pe::arg_type out)
-    {
-        std::string user_name{}, logical_path{}, source_resource{}, destination_resource{};
+	irods::error testing_policy(const pe::context& ctx, pe::arg_type out)
+	{
+		std::string user_name{}, logical_path{}, source_resource{}, destination_resource{};
 
-        rodsLog(LOG_NOTICE, "PARAMETERS\n--------\n%s\n--------", ctx.parameters.dump(4).c_str());
+		rodsLog(LOG_NOTICE, "PARAMETERS\n--------\n%s\n--------", ctx.parameters.dump(4).c_str());
 
-        if(ctx.parameters.contains("query_results")) {
-            using fsp = irods::experimental::filesystem::path;
-            std::string tmp_coll_name{}, tmp_data_name{};
+		if (ctx.parameters.contains("query_results")) {
+			using fsp = irods::experimental::filesystem::path;
+			std::string tmp_coll_name{}, tmp_data_name{};
 
-            auto query_results = ctx.parameters.at("query_results").get<std::vector<std::string>>();
-            //user_name       = query_results[0];
-            tmp_coll_name   = query_results[1];
-            tmp_data_name   = query_results[2];
-            //source_resource = query_results[3];
+			auto query_results = ctx.parameters.at("query_results").get<std::vector<std::string>>();
+			//user_name       = query_results[0];
+			tmp_coll_name = query_results[1];
+			tmp_data_name = query_results[2];
+			//source_resource = query_results[3];
 
-            logical_path = (fsp{tmp_coll_name} / fsp{tmp_data_name}).string();
-        }
-        else {
-            std::tie(user_name, logical_path, source_resource, destination_resource) =
-                capture_parameters(ctx.parameters, tag_first_resc);
-        }
+			logical_path = (fsp{tmp_coll_name} / fsp{tmp_data_name}).string();
+		}
+		else {
+			std::tie(user_name, logical_path, source_resource, destination_resource) =
+				capture_parameters(ctx.parameters, tag_first_resc);
+		}
 
-        auto comm  = ctx.rei->rsComm;
+		auto comm = ctx.rei->rsComm;
 
-        std::string event{"unspecified"};
-        if(ctx.parameters.contains(kw::event)) {
-            event = ctx.parameters.at(kw::event);
-        }
+		std::string event{"unspecified"};
+		if (ctx.parameters.contains(kw::event)) {
+			event = ctx.parameters.at(kw::event);
+		}
 
-        std::string entity_type, option, target;
-        modAVUMetadataInp_t set_op{};
-        if("METADATA" == event) {
-            if(ctx.parameters.contains(kw::conditional)) {
-                if(ctx.parameters.contains(kw::metadata)) {
-                    if(ctx.parameters.at(kw::conditional).at(kw::metadata).contains(kw::entity_type)) {
-                        entity_type = ctx.parameters.at(kw::conditional).at(kw::metadata).at(kw::entity_type);
-                    }
-                }
-            }
-            else if(ctx.parameters.contains(kw::metadata)) {
-                if(ctx.parameters.at(kw::metadata).contains(kw::entity_type)) {
-                    entity_type = ctx.parameters.at(kw::metadata).at(kw::entity_type);
-                }
-            }
-            else {
-                return ERROR(
-                        SYS_INVALID_INPUT_PARAM,
-                        "testing_policy :: missing 'entity_type' in 'metadata'");
-            }
+		std::string entity_type, option, target;
+		modAVUMetadataInp_t set_op{};
+		if ("METADATA" == event) {
+			if (ctx.parameters.contains(kw::conditional)) {
+				if (ctx.parameters.contains(kw::metadata)) {
+					if (ctx.parameters.at(kw::conditional).at(kw::metadata).contains(kw::entity_type)) {
+						entity_type = ctx.parameters.at(kw::conditional).at(kw::metadata).at(kw::entity_type);
+					}
+				}
+			}
+			else if (ctx.parameters.contains(kw::metadata)) {
+				if (ctx.parameters.at(kw::metadata).contains(kw::entity_type)) {
+					entity_type = ctx.parameters.at(kw::metadata).at(kw::entity_type);
+				}
+			}
+			else {
+				return ERROR(SYS_INVALID_INPUT_PARAM, "testing_policy :: missing 'entity_type' in 'metadata'");
+			}
 
-            option = type_to_token.at(entity_type);
-            target = type_to_entity(entity_type, ctx.parameters);
-        }
-        else if(!logical_path.empty()) {
-            target = logical_path;
+			option = type_to_token.at(entity_type);
+			target = type_to_entity(entity_type, ctx.parameters);
+		}
+		else if (!logical_path.empty()) {
+			target = logical_path;
 
-            if(!fsvr::exists(*comm, target)) {
-                target = fs::path(target).parent_path();
-            }
+			if (!fsvr::exists(*comm, target)) {
+				target = fs::path(target).parent_path();
+			}
 
-            option = fsvr::is_data_object(*comm, target) ? "-d" : "-C";
-        }
-        else if(!source_resource.empty()) {
-            target = (event == "REMOVE") ? "demoResc" : source_resource;
-            option = "-R";
-        }
-        else if(!user_name.empty()) {
-            target = (event == "REMOVE") ? "rods" : user_name;
-            option = "-u";
-        }
+			option = fsvr::is_data_object(*comm, target) ? "-d" : "-C";
+		}
+		else if (!source_resource.empty()) {
+			target = (event == "REMOVE") ? "demoResc" : source_resource;
+			option = "-R";
+		}
+		else if (!user_name.empty()) {
+			target = (event == "REMOVE") ? "rods" : user_name;
+			option = "-u";
+		}
 
-        set_op.arg0 = "add";
-        set_op.arg1 = const_cast<char*>(option.c_str());
-        set_op.arg2 = const_cast<char*>(target.c_str());
-        set_op.arg3 = "irods_policy_testing_policy";
-        set_op.arg4 = const_cast<char*>(event.c_str());
+		set_op.arg0 = "add";
+		set_op.arg1 = const_cast<char*>(option.c_str());
+		set_op.arg2 = const_cast<char*>(target.c_str());
+		set_op.arg3 = "irods_policy_testing_policy";
+		set_op.arg4 = const_cast<char*>(event.c_str());
 
-        auto status = rsModAVUMetadata(comm, &set_op);
-        if(status < 0) {
-            return ERROR(
-                       status,
-                       boost::format("Failed to invoke test_policy for [%s] with metadata [%s] [%s]")
-                       % target
-                       % "irods_testing_policy"
-                       % event);
-        }
+		auto status = rsModAVUMetadata(comm, &set_op);
+		if (status < 0) {
+			return ERROR(
+				status,
+				boost::format("Failed to invoke test_policy for [%s] with metadata [%s] [%s]") % target %
+					"irods_testing_policy" % event);
+		}
 
-        return SUCCESS();
+		return SUCCESS();
 
-    } // testing_policy
+	} // testing_policy
 
 } // namespace
 
@@ -183,13 +178,7 @@ const char usage[] = R"(
 }
 )";
 
-extern "C"
-pe::plugin_pointer_type plugin_factory(
-      const std::string& _plugin_name
-    , const std::string&) {
-    return pe::make(
-                 _plugin_name
-               , "irods_policy_testing_policy"
-               , usage
-               , testing_policy);
+extern "C" pe::plugin_pointer_type plugin_factory(const std::string& _plugin_name, const std::string&)
+{
+	return pe::make(_plugin_name, "irods_policy_testing_policy", usage, testing_policy);
 } // plugin_factory
