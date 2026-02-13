@@ -54,13 +54,6 @@ install(
   COMPONENT ${IRODS_PACKAGE_COMPONENT_POLICY_NAME}
   )
 
-install(
-  FILES
-  packaging/test_plugin_event_handler-${POLICY_NAME}.py
-  DESTINATION var/lib/irods/scripts/irods/test
-  COMPONENT ${IRODS_PACKAGE_COMPONENT_POLICY_NAME}
-  )
-
 cpack_add_component(
     ${IRODS_PACKAGE_COMPONENT_POLICY_NAME}
     GROUP
