@@ -128,7 +128,7 @@ set(CPACK_RPM_PACKAGE_VENDOR "iRODS Consortium")
 set(CPACK_RPM_PACKAGE_URL "https://irods.org")
 set(CPACK_RPM_PACKAGE_AUTOREQ 0)
 set(CPACK_RPM_PACKAGE_AUTOPROV 0)
-set(CPACK_RPM_FILE_NAME DEB-DEFAULT)
+set(CPACK_RPM_FILE_NAME RPM-DEFAULT)
 
 set(CPACK_ARCHIVE_COMPONENT_INSTALL ON)
 
@@ -158,7 +158,7 @@ include(${CMAKE_SOURCE_DIR}/filesystem_usage.cmake)
 include(${CMAKE_SOURCE_DIR}/log_context.cmake)
 include(${CMAKE_SOURCE_DIR}/query_processor.cmake)
 
-if (BUILD_TESTING_POLICY)
+if (BUILD_TESTING_POLICY OR (CMAKE_BUILD_TYPE STREQUAL "Debug"))
     include(${CMAKE_SOURCE_DIR}/testing_policy.cmake)
 endif()
 
@@ -168,5 +168,16 @@ include(${CMAKE_SOURCE_DIR}/event_handler_collection_modified.cmake)
 include(${CMAKE_SOURCE_DIR}/event_handler_user_modified.cmake)
 include(${CMAKE_SOURCE_DIR}/event_handler_resource_modified.cmake)
 include(${CMAKE_SOURCE_DIR}/verify_checksum.cmake)
+
+install(
+    FILES
+    packaging/test_plugins_policy.py
+    DESTINATION var/lib/irods/scripts/irods/test
+    COMPONENT testing)
+
+cpack_add_component(
+    testing
+    GROUP
+    policy)
 
 include(CPack)
