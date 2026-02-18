@@ -49,20 +49,20 @@ def copy_output_packages(build_directory, output_root_directory):
         irods_python_ci_utilities.append_os_specific_directory(output_root_directory),
         lambda s:s.endswith(irods_python_ci_utilities.get_package_suffix()))
 
-def main(build_directory, output_root_directory, irods_packages_root_directory, externals_directory, debug_build, enable_asan, enable_ubsan, build_test_plugin):
+def main(build_directory, output_root_directory, irods_packages_root_directory, externals_directory, debug_build, enable_asan, enable_ubsan, include_test_executables):
     install_building_dependencies(externals_directory)
     if irods_packages_root_directory:
         irods_python_ci_utilities.install_irods_dev_and_runtime_packages(irods_packages_root_directory)
     build_directory = os.path.abspath(build_directory or tempfile.mkdtemp(prefix='irods_policy_composition_plugin_build_directory'))
     additional_cmake_args = []
 
-    if debug_build:
+    if include_test_executables:
         additional_cmake_args.extend(['-D', 'BUILD_TESTING_POLICY=ON'])
     if enable_asan:
         additional_cmake_args.extend(['-D', 'IRODS_ENABLE_ADDRESS_SANITIZER=ON'])
     if enable_ubsan:
         additional_cmake_args.extend(['-D', 'IRODS_ENABLE_UNDEFINED_BEHAVIOR_SANITIZER=ON'])
-    if build_test_plugin:
+    if debug_build:
         additional_cmake_args.extend(['-D', 'CMAKE_BUILD_TYPE=Debug'])
 
     irods_python_ci_utilities.subprocess_get_output(['cmake', *additional_cmake_args, os.path.dirname(os.path.realpath(__file__))], check_rc=True, cwd=build_directory)
@@ -79,7 +79,7 @@ if __name__ == '__main__':
     parser.add_option('--debug_build', action='store_true')
     parser.add_option('--enable_address_sanitizer', dest='enable_asan', action='store_true')
     parser.add_option('--enable_undefined_behavior_sanitizer', dest='enable_ubsan', action='store_true')
-    parser.add_option('--build_test_plugin', action='store_true')
+    parser.add_option('--exclude_test_executables', dest='include_test_executables', action='store_false', default=True)
     options, _ = parser.parse_args()
 
     main(options.build_directory,
@@ -89,5 +89,5 @@ if __name__ == '__main__':
          options.debug_build,
          options.enable_asan,
          options.enable_ubsan,
-         options.build_test_plugin)
+         options.include_test_executables)
 
