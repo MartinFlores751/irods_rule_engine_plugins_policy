@@ -222,6 +222,49 @@ OUTPUT ruleExecOut"""
                 admin_session.assert_icommand('irm -f ' + filename)
                 admin_session.assert_icommand('iadmin rum')
 
+    def test_specific_query_invocation(self):
+        with session.make_session_for_existing_admin() as admin_session:
+            try:
+                filename = 'test_put_file'
+                lib.create_local_testfile(filename)
+                admin_session.assert_icommand('iput ' + filename)
+                admin_session.assert_icommand('ils -l', 'STDOUT_SINGLELINE', filename)
+                admin_session.assert_icommand('imeta ls -d ' + filename, 'STDOUT_SINGLELINE', 'None')
+
+                rule = """
+{
+    "policy_to_invoke" : "irods_policy_execute_rule",
+    "parameters" : {
+        "policy_to_invoke" : "irods_policy_query_processor",
+        "parameters" : {
+              "query_string" : "ShowCollAcls",
+              "query_limit" : 1,
+              "query_type" : "specific",
+              "number_of_threads" : 1,
+              "policies_to_invoke" : [
+                  {
+                      "policy_to_invoke" : "irods_policy_testing_policy",
+                      "configuration" : {
+                      }
+                  }
+              ]
+         }
+    }
+}
+INPUT null
+OUTPUT ruleExecOut"""
+
+                rule_file = tempfile.NamedTemporaryFile(mode='wt', dir='/tmp', delete=False).name + '.r'
+                with open(rule_file, 'w') as f:
+                    f.write(rule)
+
+                with self.query_processor_configured():
+                    admin_session.assert_icommand(['irule', '-r', 'irods_rule_engine_plugin-cpp_default_policy-instance', '-F', rule_file], 'STDOUT_SINGLELINE', 'usage')
+                    admin_session.assert_icommand('imeta ls -d ' + filename, 'STDOUT_SINGLELINE', 'irods_policy_testing_policy')
+            finally:
+                admin_session.assert_icommand('irm -f ' + filename)
+                admin_session.assert_icommand('iadmin rum')
+
     def test_query_invocation_fail(self):
         with session.make_session_for_existing_admin() as admin_session:
             try:
