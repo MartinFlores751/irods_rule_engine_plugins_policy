@@ -260,7 +260,7 @@ OUTPUT ruleExecOut"""
 
                 with self.query_processor_configured():
                     admin_session.assert_icommand(['irule', '-r', 'irods_rule_engine_plugin-cpp_default_policy-instance', '-F', rule_file], 'STDOUT_SINGLELINE', 'usage')
-                    admin_session.assert_icommand('imeta ls -d ' + filename, 'STDOUT_SINGLELINE', 'irods_policy_testing_policy')
+                    admin_session.assert_icommand('imeta ls -C ' + admin_session.home_collection, 'STDOUT_SINGLELINE', 'irods_policy_testing_policy')
             finally:
                 admin_session.assert_icommand('irm -f ' + filename)
                 admin_session.assert_icommand('iadmin rum')
